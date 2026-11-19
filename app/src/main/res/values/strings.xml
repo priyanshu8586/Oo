@@ -1,0 +1,24 @@
+<resources>
+    <string name="app_name">Jarvis</string>
+    <string name="setup_title">JARVIS INITIALIZATION</string>
+    <string name="setup_subtitle">Paste your Google Gemini API key to activate voice intelligence. Stored locally on your device only.</string>
+    <string name="setup_key_label">Gemini API Key</string>
+    <string name="setup_key_placeholder">AIzaSy...</string>
+    <string name="setup_save_button">Activate Jarvis</string>
+    <string name="setup_cancel_button">Cancel</string>
+    <string name="setup_help_text">Get a free API key from Google AI Studio (aistudio.google.com).</string>
+    <string name="status_idle">Tap reactor to speak</string>
+    <string name="status_wake_waiting">Wake mode active — say \"Jarvis\"</string>
+    <string name="status_listening">Listening…</string>
+    <string name="status_thinking">Thinking…</string>
+    <string name="status_speaking">Speaking…</string>
+    <string name="wake_toggle_label">Wake \"Jarvis\"</string>
+    <string name="change_key_desc">Change API key</string>
+    <string name="clear_chat_desc">Clear transcript</string>
+    <string name="lang_cycle_desc">Switch recognition language</string>
+    <string name="reactor_mic_desc">Jarvis voice reactor button</string>
+    <string name="permission_needed_title">Microphone Access Required</string>
+    <string name="permission_needed_body">Jarvis is voice-only and needs microphone permission to hear your Hindi, English, or Hinglish commands.</string>
+    <string name="permission_grant_button">Grant Microphone</string>
+    <string name="empty_transcript_hint">Try saying:\n• \"What\'s the time?\"\n• \"Aaj mausam kaisa hai?\"\n• \"Set a timer for 2 minutes\"\n• \"Open YouTube\"</string>
+</resources>

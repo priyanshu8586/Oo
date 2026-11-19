@@ -1,0 +1,1211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#050a12" />
+  <meta name="description" content="Voice-only Iron-Man-style Jarvis AI Assistant supporting Hindi, English, and Hinglish." />
+  <title>J.A.R.V.I.S.</title>
+  <link rel="manifest" href="./manifest.json" />
+  <style>
+    :root {
+      --bg: #050a12;
+      --surface: #0b1424;
+      --surface-elevated: #111f36;
+      --cyan: #00e5ff;
+      --cyan-soft: rgba(0, 229, 255, 0.16);
+      --amber: #ffb300;
+      --amber-soft: rgba(255, 179, 0, 0.18);
+      --emerald: #00ffa3;
+      --danger: #ff4d6d;
+      --text: #e8f4ff;
+      --text-dim: #7f9bb8;
+      --border: rgba(0, 229, 255, 0.22);
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      background: radial-gradient(circle at 50% 25%, #0c1b33 0%, var(--bg) 70%);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, sans-serif;
+      overflow: hidden;
+    }
+
+    .app-shell {
+      display: flex;
+      flex-direction: column;
+      height: 100dvh;
+      max-width: 520px;
+      margin: 0 auto;
+      padding: env(safe-area-inset-top, 12px) 16px env(safe-area-inset-bottom, 12px);
+    }
+
+    /* Top HUD Bar */
+    .hud-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 8px 0 6px;
+      flex-shrink: 0;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .brand-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--cyan);
+      box-shadow: 0 0 10px var(--cyan);
+    }
+
+    .brand-title {
+      font-size: 1rem;
+      font-weight: 700;
+      letter-spacing: 0.22em;
+      color: var(--cyan);
+    }
+
+    .hud-controls {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .pill-btn {
+      min-height: 44px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: rgba(11, 20, 36, 0.85);
+      color: var(--text);
+      font-size: 0.78rem;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: background 0.2s, border-color 0.2s, transform 0.1s;
+    }
+
+    .pill-btn:active {
+      transform: scale(0.96);
+    }
+
+    .pill-btn.active {
+      background: var(--cyan-soft);
+      border-color: var(--cyan);
+      color: var(--cyan);
+    }
+
+    /* Compatibility Banner */
+    .compat-banner {
+      display: none;
+      margin: 10px 0;
+      padding: 14px 16px;
+      border-radius: 14px;
+      border: 1px solid var(--danger);
+      background: rgba(255, 77, 109, 0.12);
+      color: #ffd7df;
+      font-size: 0.9rem;
+      line-height: 1.45;
+      flex-shrink: 0;
+    }
+
+    .compat-banner.visible {
+      display: block;
+    }
+
+    /* Setup Screen */
+    .setup-screen {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 16px;
+      padding: 16px 4px;
+    }
+
+    .setup-card {
+      background: rgba(11, 20, 36, 0.92);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 24px 20px;
+      box-shadow: 0 0 36px rgba(0, 229, 255, 0.08);
+    }
+
+    .setup-card h1 {
+      margin: 0 0 8px;
+      font-size: 1.25rem;
+      letter-spacing: 0.12em;
+      color: var(--cyan);
+    }
+
+    .setup-card p {
+      margin: 0 0 18px;
+      font-size: 0.92rem;
+      color: var(--text-dim);
+      line-height: 1.5;
+    }
+
+    .key-input {
+      width: 100%;
+      min-height: 48px;
+      padding: 12px 14px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: #060c17;
+      color: var(--text);
+      font-size: 0.95rem;
+      outline: none;
+      margin-bottom: 14px;
+    }
+
+    .key-input:focus {
+      border-color: var(--cyan);
+      box-shadow: 0 0 0 3px var(--cyan-soft);
+    }
+
+    .primary-btn {
+      width: 100%;
+      min-height: 50px;
+      border: none;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #00e5ff, #0099ff);
+      color: #03101d;
+      font-size: 1rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      cursor: pointer;
+    }
+
+    .secondary-btn {
+      width: 100%;
+      min-height: 46px;
+      margin-top: 10px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: transparent;
+      color: var(--text-dim);
+      font-size: 0.92rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .setup-error {
+      color: var(--danger);
+      font-size: 0.85rem;
+      margin: -6px 0 12px;
+      min-height: 1.1em;
+    }
+
+    /* Main Assistant HUD */
+    .assistant-screen {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    .reactor-stage {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 12px 0 8px;
+      flex-shrink: 0;
+    }
+
+    .reactor-btn {
+      position: relative;
+      width: 176px;
+      height: 176px;
+      border-radius: 50%;
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      display: grid;
+      place-items: center;
+      padding: 0;
+      outline: none;
+    }
+
+    .reactor-ring {
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      border: 2px solid var(--cyan);
+      box-shadow: 0 0 24px rgba(0, 229, 255, 0.25), inset 0 0 24px rgba(0, 229, 255, 0.14);
+      transition: border-color 0.3s, box-shadow 0.3s, transform 0.3s;
+    }
+
+    .reactor-ring.outer {
+      border-style: dashed;
+      border-width: 2px;
+      opacity: 0.75;
+      animation: spinSlow 18s linear infinite;
+    }
+
+    .reactor-ring.mid {
+      inset: 14px;
+      border-width: 3px;
+      border-color: rgba(0, 229, 255, 0.65);
+      border-top-color: transparent;
+      border-bottom-color: transparent;
+      animation: spinReverse 8s linear infinite;
+    }
+
+    .reactor-core {
+      width: 96px;
+      height: 96px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(0, 229, 255, 0.42) 0%, rgba(0, 140, 255, 0.14) 70%, transparent 100%);
+      border: 2px solid var(--cyan);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 26px rgba(0, 229, 255, 0.4);
+      transition: all 0.25s ease;
+    }
+
+    .reactor-core svg {
+      width: 38px;
+      height: 38px;
+      fill: var(--cyan);
+      transition: fill 0.25s ease;
+    }
+
+    /* States */
+    .reactor-btn[data-state="listening"] .reactor-ring.outer,
+    .reactor-btn[data-state="wake"] .reactor-ring.outer {
+      animation: spinSlow 6s linear infinite;
+    }
+
+    .reactor-btn[data-state="listening"] .reactor-core {
+      animation: pulseListen 1.2s ease-in-out infinite;
+      box-shadow: 0 0 40px rgba(0, 229, 255, 0.75);
+    }
+
+    .reactor-btn[data-state="thinking"] .reactor-ring,
+    .reactor-btn[data-state="thinking"] .reactor-core {
+      border-color: var(--amber);
+      box-shadow: 0 0 32px rgba(255, 179, 0, 0.5);
+    }
+
+    .reactor-btn[data-state="thinking"] .reactor-core svg {
+      fill: var(--amber);
+    }
+
+    .reactor-btn[data-state="thinking"] .reactor-ring.mid {
+      animation: spinReverse 1.5s linear infinite;
+    }
+
+    .reactor-btn[data-state="speaking"] .reactor-ring,
+    .reactor-btn[data-state="speaking"] .reactor-core {
+      border-color: var(--emerald);
+      box-shadow: 0 0 38px rgba(0, 255, 163, 0.6);
+    }
+
+    .reactor-btn[data-state="speaking"] .reactor-core {
+      animation: pulseSpeak 0.75s ease-in-out infinite;
+    }
+
+    .reactor-btn[data-state="speaking"] .reactor-core svg {
+      fill: var(--emerald);
+    }
+
+    @keyframes spinSlow {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    @keyframes spinReverse {
+      from { transform: rotate(360deg); }
+      to { transform: rotate(0deg); }
+    }
+
+    @keyframes pulseListen {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.1); }
+    }
+
+    @keyframes pulseSpeak {
+      0%, 100% { transform: scale(0.97); }
+      50% { transform: scale(1.13); }
+    }
+
+    .status-line {
+      margin-top: 12px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--cyan);
+      text-align: center;
+      min-height: 1.4em;
+    }
+
+    .status-sub {
+      margin-top: 4px;
+      font-size: 0.78rem;
+      color: var(--text-dim);
+      text-align: center;
+      min-height: 1.2em;
+    }
+
+    .timer-badge {
+      display: none;
+      margin-top: 8px;
+      padding: 6px 14px;
+      border-radius: 999px;
+      background: var(--amber-soft);
+      border: 1px solid var(--amber);
+      color: var(--amber);
+      font-size: 0.82rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+    }
+
+    .timer-badge.visible {
+      display: inline-block;
+    }
+
+    /* Transcript */
+    .transcript-wrap {
+      flex: 1;
+      min-height: 0;
+      margin-top: 10px;
+      border-radius: 18px;
+      border: 1px solid rgba(0, 229, 255, 0.16);
+      background: rgba(8, 15, 28, 0.78);
+      padding: 12px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      scroll-behavior: smooth;
+    }
+
+    .empty-hint {
+      margin: auto;
+      text-align: center;
+      color: var(--text-dim);
+      font-size: 0.86rem;
+      line-height: 1.6;
+      padding: 12px;
+    }
+
+    .msg {
+      max-width: 88%;
+      padding: 10px 13px;
+      border-radius: 14px;
+      font-size: 0.92rem;
+      line-height: 1.45;
+      word-wrap: break-word;
+    }
+
+    .msg.user {
+      align-self: flex-end;
+      background: rgba(0, 229, 255, 0.14);
+      border: 1px solid rgba(0, 229, 255, 0.32);
+      color: #dff9ff;
+    }
+
+    .msg.jarvis {
+      align-self: flex-start;
+      background: rgba(17, 31, 54, 0.95);
+      border: 1px solid rgba(127, 155, 184, 0.25);
+      color: var(--text);
+    }
+
+    .msg-role {
+      display: block;
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-bottom: 3px;
+      opacity: 0.75;
+    }
+
+    .msg.user .msg-role { color: var(--cyan); }
+    .msg.jarvis .msg-role { color: var(--emerald); }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="hud-header">
+      <div class="brand">
+        <span class="brand-dot"></span>
+        <span class="brand-title">J.A.R.V.I.S.</span>
+      </div>
+      <div class="hud-controls" id="hudControls">
+        <button class="pill-btn" id="langBtn" type="button" aria-label="Change recognition language">AUTO (HI/EN)</button>
+        <button class="pill-btn" id="wakeBtn" type="button" aria-label="Toggle always listening wake mode">Wake: OFF</button>
+        <button class="pill-btn" id="changeKeyBtn" type="button" aria-label="Change Gemini API key">Key</button>
+      </div>
+    </header>
+
+    <div class="compat-banner" id="compatBanner" role="alert">
+      <strong>Speech Recognition Not Supported</strong><br />
+      Your browser (such as iPhone Safari) does not support the Web Speech API. Please open this app in
+      <strong>Google Chrome on Android</strong> or desktop Chrome over HTTPS.
+    </div>
+
+    <!-- One-time API Key Setup Screen -->
+    <section class="setup-screen hidden" id="setupScreen">
+      <div class="setup-card">
+        <h1>JARVIS INITIALIZATION</h1>
+        <p>
+          Paste your Google Gemini API key below. It is saved only in your browser's
+          <code>localStorage</code> and never hardcoded.
+        </p>
+        <input
+          type="password"
+          id="apiKeyInput"
+          class="key-input"
+          placeholder="AIzaSy..."
+          autocomplete="off"
+          spellcheck="false"
+        />
+        <div class="setup-error" id="setupError"></div>
+        <button class="primary-btn" id="saveKeyBtn" type="button">Activate Jarvis</button>
+        <button class="secondary-btn hidden" id="cancelKeyBtn" type="button">Cancel</button>
+      </div>
+    </section>
+
+    <!-- Main Voice-Only HUD -->
+    <main class="assistant-screen hidden" id="assistantScreen">
+      <section class="reactor-stage">
+        <button
+          class="reactor-btn"
+          id="reactorBtn"
+          type="button"
+          data-state="idle"
+          aria-label="Tap to speak to Jarvis"
+        >
+          <span class="reactor-ring outer"></span>
+          <span class="reactor-ring mid"></span>
+          <span class="reactor-core">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M12 14a3 3 0 0 0 3-3V5a3 3 0 1 0-6 0v6a3 3 0 0 0 3 3zm5-3a1 1 0 1 0-2 0 3 3 0 1 1-6 0 1 1 0 1 0-2 0 5 5 0 0 0 4 4.9V19H9a1 1 0 1 0 0 2h6a1 1 0 1 0 0-2h-2v-3.1A5 5 0 0 0 17 11z"/>
+            </svg>
+          </span>
+        </button>
+        <div class="status-line" id="statusLine">Tap Reactor to Speak</div>
+        <div class="status-sub" id="statusSub">Supports Hindi, English &amp; Hinglish</div>
+        <div class="timer-badge" id="timerBadge"></div>
+      </section>
+
+      <section class="transcript-wrap" id="transcriptWrap" aria-live="polite">
+        <div class="empty-hint" id="emptyHint">
+          Voice-only mode ready.<br />
+          Try saying: <strong>"What's the time?"</strong>, <strong>"Open YouTube"</strong>,<br />
+          <strong>"Set a timer for 2 minutes"</strong>, or ask anything in Hindi, English, or Hinglish.
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    (() => {
+      // ==================== CONFIG ====================
+      const GEMINI_MODEL = "gemini-2.5-flash";
+      const SYSTEM_INSTRUCTION =
+        "You are Jarvis, a friendly, smart assistant. Reply briefly in the same language the user spoke. Keep answers short because they will be spoken aloud.";
+      const MAX_MEMORY_MESSAGES = 10;
+      const API_KEY_STORAGE = "jarvis_gemini_api_key";
+
+      // ==================== DOM ====================
+      const compatBanner = document.getElementById("compatBanner");
+      const hudControls = document.getElementById("hudControls");
+      const setupScreen = document.getElementById("setupScreen");
+      const assistantScreen = document.getElementById("assistantScreen");
+      const apiKeyInput = document.getElementById("apiKeyInput");
+      const setupError = document.getElementById("setupError");
+      const saveKeyBtn = document.getElementById("saveKeyBtn");
+      const cancelKeyBtn = document.getElementById("cancelKeyBtn");
+      const changeKeyBtn = document.getElementById("changeKeyBtn");
+      const langBtn = document.getElementById("langBtn");
+      const wakeBtn = document.getElementById("wakeBtn");
+      const reactorBtn = document.getElementById("reactorBtn");
+      const statusLine = document.getElementById("statusLine");
+      const statusSub = document.getElementById("statusSub");
+      const timerBadge = document.getElementById("timerBadge");
+      const transcriptWrap = document.getElementById("transcriptWrap");
+      const emptyHint = document.getElementById("emptyHint");
+
+      // ==================== STATE ====================
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      const speechSupported = Boolean(SpeechRecognition);
+
+      let recognition = null;
+      let state = "idle"; // idle | wake | listening | thinking | speaking
+      let sessionActive = false; // auto-restart loop flag
+      let alwaysListening = false;
+      let isSpeaking = false;
+      let isListening = false;
+      let langMode = "auto"; // auto | hi-IN | en-IN
+      let activeRecogLang = "hi-IN";
+      let triedFallbackLang = false;
+      let lastJarvisReply = "";
+      let conversationHistory = []; // max 10 { role: "user"|"model", parts: [{ text }] }
+      let activeTimerId = null;
+      let timerEndMs = 0;
+      let voices = [];
+      let speechKeepAliveId = null;
+
+      // ==================== SERVICE WORKER ====================
+      if ("serviceWorker" in navigator) {
+        window.addEventListener("load", () => {
+          navigator.serviceWorker.register("./service-worker.js").catch(() => {});
+        });
+      }
+
+      // ==================== VOICES ====================
+      function loadVoices() {
+        if (!("speechSynthesis" in window)) return;
+        voices = window.speechSynthesis.getVoices() || [];
+      }
+      loadVoices();
+      if ("speechSynthesis" in window && "onvoiceschanged" in window.speechSynthesis) {
+        window.speechSynthesis.onvoiceschanged = loadVoices;
+      }
+
+      // ==================== API KEY SETUP ====================
+      function getApiKey() {
+        return (localStorage.getItem(API_KEY_STORAGE) || "").trim();
+      }
+
+      function showSetup(allowCancel) {
+        stopEverything();
+        apiKeyInput.value = getApiKey();
+        setupError.textContent = "";
+        cancelKeyBtn.classList.toggle("hidden", !allowCancel);
+        setupScreen.classList.remove("hidden");
+        assistantScreen.classList.add("hidden");
+        hudControls.classList.add("hidden");
+      }
+
+      function showAssistant() {
+        setupScreen.classList.add("hidden");
+        assistantScreen.classList.remove("hidden");
+        hudControls.classList.remove("hidden");
+        setState(alwaysListening ? "wake" : "idle");
+      }
+
+      saveKeyBtn.addEventListener("click", () => {
+        const key = apiKeyInput.value.trim();
+        if (!key || key.length < 15) {
+          setupError.textContent = "Please paste a valid Gemini API key.";
+          return;
+        }
+        localStorage.setItem(API_KEY_STORAGE, key);
+        showAssistant();
+      });
+
+      cancelKeyBtn.addEventListener("click", () => {
+        if (getApiKey()) showAssistant();
+      });
+
+      changeKeyBtn.addEventListener("click", () => showSetup(true));
+
+      // ==================== UI HELPERS ====================
+      function setState(nextState, subText) {
+        state = nextState;
+        reactorBtn.setAttribute("data-state", nextState);
+        const labels = {
+          idle: "Tap Reactor to Speak",
+          wake: "Always Listening — Say \"Jarvis\"",
+          listening: "Listening…",
+          thinking: "Thinking…",
+          speaking: "Speaking…"
+        };
+        statusLine.textContent = labels[nextState] || "Ready";
+        if (subText !== undefined) {
+          statusSub.textContent = subText;
+        } else if (nextState === "idle") {
+          statusSub.textContent = "Supports Hindi, English & Hinglish";
+        } else if (nextState === "wake") {
+          statusSub.textContent = "Say \"Jarvis\" followed by your command";
+        } else if (nextState === "listening") {
+          statusSub.textContent = `Mic active (${activeRecogLang})`;
+        } else if (nextState === "thinking") {
+          statusSub.textContent = "Processing response…";
+        } else if (nextState === "speaking") {
+          statusSub.textContent = "Mic paused while Jarvis speaks";
+        }
+      }
+
+      function appendTranscript(role, text) {
+        if (emptyHint) emptyHint.style.display = "none";
+        const div = document.createElement("div");
+        div.className = `msg ${role}`;
+        const label = document.createElement("span");
+        label.className = "msg-role";
+        label.textContent = role === "user" ? "You" : "Jarvis";
+        const body = document.createElement("span");
+        body.textContent = text;
+        div.appendChild(label);
+        div.appendChild(body);
+        transcriptWrap.appendChild(div);
+        transcriptWrap.scrollTop = transcriptWrap.scrollHeight;
+      }
+
+      // ==================== LANGUAGE DETECTION ====================
+      function detectLanguage(text) {
+        if (/[\u0900-\u097F]/.test(text)) return "hi-IN";
+        const lower = text.toLowerCase();
+        const hinglishHints = [
+          "kya", "hai", "hain", "kaise", "kaisa", "kaisi", "baje", "samay",
+          "aaj", "kal", "karo", "kholo", "ruko", "band", "bolo", "batao",
+          "theek", "nahi", "haan", "shukriya", "dhanyavaad", "namaste",
+          "kitne", "bhasha", "badlo", "dobara", "mera", "meri", "tum", "aap"
+        ];
+        const words = lower.split(/\s+/);
+        const hits = words.filter((w) => hinglishHints.includes(w.replace(/[^a-z]/g, "")));
+        if (hits.length >= 1) return "hi-IN";
+        return "en-IN";
+      }
+
+      function pickVoice(langCode) {
+        if (!voices.length) loadVoices();
+        const prefix = langCode.startsWith("hi") ? "hi" : "en";
+        return (
+          voices.find((v) => v.lang.toLowerCase() === langCode.toLowerCase()) ||
+          voices.find((v) => v.lang.toLowerCase().startsWith(prefix)) ||
+          voices.find((v) => v.lang.toLowerCase().startsWith("en")) ||
+          null
+        );
+      }
+
+      // ==================== SPEECH SYNTHESIS ====================
+      function speak(text, forcedLang) {
+        lastJarvisReply = text;
+        appendTranscript("jarvis", text);
+
+        if (!("speechSynthesis" in window)) {
+          afterSpeak();
+          return;
+        }
+
+        // Stop recognition before speaking so Jarvis never hears itself
+        stopRecognitionNow();
+        isSpeaking = true;
+        setState("speaking");
+
+        window.speechSynthesis.cancel();
+        clearInterval(speechKeepAliveId);
+
+        const lang = forcedLang || detectLanguage(text);
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = lang;
+        const chosenVoice = pickVoice(lang);
+        if (chosenVoice) utterance.voice = chosenVoice;
+        utterance.rate = 1.0;
+        utterance.pitch = 1.0;
+
+        let finished = false;
+        const finish = () => {
+          if (finished) return;
+          finished = true;
+          clearInterval(speechKeepAliveId);
+          clearTimeout(safetyTimer);
+          isSpeaking = false;
+          afterSpeak();
+        };
+
+        utterance.onend = finish;
+        utterance.onerror = finish;
+
+        // Chrome Android pause workaround
+        speechKeepAliveId = setInterval(() => {
+          if (window.speechSynthesis.speaking) {
+            window.speechSynthesis.resume();
+          }
+        }, 4000);
+
+        const safetyMs = Math.max(4500, text.length * 110);
+        const safetyTimer = setTimeout(finish, safetyMs);
+
+        window.speechSynthesis.speak(utterance);
+      }
+
+      function afterSpeak() {
+        if (sessionActive) {
+          setTimeout(() => startListening(), 350);
+        } else if (alwaysListening) {
+          setTimeout(() => startListening(), 400);
+        } else {
+          setState("idle");
+        }
+      }
+
+      // ==================== TIMERS ====================
+      function parseMinutes(text) {
+        const digitMatch = text.match(/(\d+(?:\.\d+)?)\s*(?:minute|minutes|min|mins|मिनट)/i);
+        if (digitMatch) return parseFloat(digitMatch[1]);
+        const wordMap = {
+          one: 1, two: 2, three: 3, four: 4, five: 5,
+          six: 6, seven: 7, eight: 8, nine: 9, ten: 10,
+          ek: 1, do: 2, teen: 3, char: 4, paanch: 5,
+          एक: 1, दो: 2, तीन: 3, चार: 4, पांच: 5
+        };
+        const tokens = text.toLowerCase().split(/\s+/);
+        for (const t of tokens) {
+          if (wordMap[t] !== undefined) return wordMap[t];
+        }
+        return null;
+      }
+
+      function startTimer(minutes, replyLang) {
+        if (activeTimerId) clearInterval(activeTimerId);
+        const ms = Math.round(minutes * 60 * 1000);
+        timerEndMs = Date.now() + ms;
+        timerBadge.classList.add("visible");
+
+        const updateBadge = () => {
+          const remaining = Math.max(0, timerEndMs - Date.now());
+          const totalSec = Math.ceil(remaining / 1000);
+          const m = Math.floor(totalSec / 60);
+          const s = totalSec % 60;
+          timerBadge.textContent = `TIMER ${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+          if (remaining <= 0) {
+            clearInterval(activeTimerId);
+            activeTimerId = null;
+            timerBadge.classList.remove("visible");
+            speak(
+              replyLang === "hi-IN"
+                ? `${minutes} मिनट का टाइमर पूरा हो गया है।`
+                : `Your ${minutes} minute timer is complete.`,
+              replyLang
+            );
+          }
+        };
+
+        updateBadge();
+        activeTimerId = setInterval(updateBadge, 500);
+      }
+
+      // ==================== LOCAL COMMANDS ====================
+      function handleLocalCommand(rawText) {
+        const lower = rawText.toLowerCase().trim();
+        const lang = detectLanguage(rawText);
+
+        // Stop
+        if (
+          /^(stop|ruko|band karo|quiet|silence|चुप|रुको|बंद करो)\b/i.test(lower) ||
+          lower === "stop listening"
+        ) {
+          stopEverything();
+          const msg = lang === "hi-IN" ? "ठीक है, मैं रुक गया हूँ।" : "Okay, standing by.";
+          appendTranscript("jarvis", msg);
+          return true;
+        }
+
+        // Repeat that
+        if (
+          /(repeat that|say that again|repeat|dobara bolo|phir se bolo|दोबारा बोलो|फिर से)/i.test(lower)
+        ) {
+          if (lastJarvisReply) {
+            speak(lastJarvisReply, detectLanguage(lastJarvisReply));
+          } else {
+            speak(lang === "hi-IN" ? "अभी दोहराने के लिए कुछ नहीं है।" : "Nothing to repeat yet.", lang);
+          }
+          return true;
+        }
+
+        // Change language
+        if (/(change language|switch language|bhasha badlo|भाषा बदलो)/i.test(lower)) {
+          cycleLanguage(true);
+          return true;
+        }
+
+        // What's the time
+        if (
+          /(what'?s the time|what is the time|tell me the time|current time|kitne baje|kya samay|टाइम|समय)/i.test(lower)
+        ) {
+          const now = new Date();
+          const timeStr = now.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+          const reply =
+            lang === "hi-IN" ? `अभी ${timeStr} बजे हैं।` : `It is ${timeStr}.`;
+          speak(reply, lang);
+          return true;
+        }
+
+        // Open YouTube / Google / WhatsApp
+        if (/(open|kholo|खोलो)/i.test(lower)) {
+          if (/youtube|यूट्यूब/i.test(lower)) {
+            window.open("https://www.youtube.com", "_blank", "noopener");
+            speak(lang === "hi-IN" ? "यूट्यूब खोल रहा हूँ।" : "Opening YouTube.", lang);
+            return true;
+          }
+          if (/google|गूगल/i.test(lower)) {
+            window.open("https://www.google.com", "_blank", "noopener");
+            speak(lang === "hi-IN" ? "गूगल खोल रहा हूँ।" : "Opening Google.", lang);
+            return true;
+          }
+          if (/whatsapp|व्हाट्सएप|व्हाट्सऐप/i.test(lower)) {
+            window.open("https://wa.me/", "_blank", "noopener");
+            speak(lang === "hi-IN" ? "व्हाट्सऐप खोल रहा हूँ।" : "Opening WhatsApp.", lang);
+            return true;
+          }
+        }
+
+        // Set a timer for X minutes
+        if (/(timer|टाइमर)/i.test(lower)) {
+          const mins = parseMinutes(rawText);
+          if (mins && mins > 0) {
+            startTimer(mins, lang);
+            const reply =
+              lang === "hi-IN"
+                ? `${mins} मिनट का टाइमर शुरू कर दिया है।`
+                : `Timer set for ${mins} ${mins === 1 ? "minute" : "minutes"}.`;
+            speak(reply, lang);
+            return true;
+          }
+        }
+
+        return false;
+      }
+
+      // ==================== GEMINI API ====================
+      async function askGemini(userText) {
+        const apiKey = getApiKey();
+        if (!apiKey) {
+          showSetup(false);
+          return;
+        }
+
+        if (!navigator.onLine) {
+          speak("No internet connection. Please check your network and try again.", "en-IN");
+          return;
+        }
+
+        setState("thinking");
+
+        conversationHistory.push({
+          role: "user",
+          parts: [{ text: userText }]
+        });
+        if (conversationHistory.length > MAX_MEMORY_MESSAGES) {
+          conversationHistory = conversationHistory.slice(-MAX_MEMORY_MESSAGES);
+        }
+
+        const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(
+          GEMINI_MODEL
+        )}:generateContent?key=${encodeURIComponent(apiKey)}`;
+
+        try {
+          const response = await fetch(endpoint, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              system_instruction: {
+                parts: [{ text: SYSTEM_INSTRUCTION }]
+              },
+              contents: conversationHistory,
+              generationConfig: {
+                temperature: 0.7,
+                maxOutputTokens: 200
+              }
+            })
+          });
+
+          if (!response.ok) {
+            conversationHistory.pop();
+            if (response.status === 400 || response.status === 401 || response.status === 403) {
+              speak("Your Gemini API key looks invalid. Please tap Key to update it.", "en-IN");
+            } else if (response.status === 429) {
+              speak("Rate limit reached. Please wait a moment before speaking again.", "en-IN");
+            } else {
+              speak("I could not reach Gemini right now. Please try again.", "en-IN");
+            }
+            return;
+          }
+
+          const data = await response.json();
+          const reply =
+            data?.candidates?.[0]?.content?.parts
+              ?.map((p) => p.text || "")
+              .join(" ")
+              .trim() || "";
+
+          if (!reply) {
+            conversationHistory.pop();
+            speak("I did not get a response. Please ask again.", "en-IN");
+            return;
+          }
+
+          conversationHistory.push({
+            role: "model",
+            parts: [{ text: reply }]
+          });
+          if (conversationHistory.length > MAX_MEMORY_MESSAGES) {
+            conversationHistory = conversationHistory.slice(-MAX_MEMORY_MESSAGES);
+          }
+
+          speak(reply);
+        } catch (err) {
+          conversationHistory.pop();
+          speak("Network error while contacting Gemini. Please check your connection.", "en-IN");
+        }
+      }
+
+      // ==================== SPEECH RECOGNITION ====================
+      function resolveRecognitionLang() {
+        if (langMode === "hi-IN") return "hi-IN";
+        if (langMode === "en-IN") return "en-IN";
+        return triedFallbackLang ? "en-IN" : "hi-IN";
+      }
+
+      function stopRecognitionNow() {
+        if (recognition) {
+          try {
+            recognition.onresult = null;
+            recognition.onerror = null;
+            recognition.onend = null;
+            recognition.abort();
+          } catch (_) {}
+          recognition = null;
+        }
+        isListening = false;
+      }
+
+      function stopEverything() {
+        sessionActive = false;
+        isSpeaking = false;
+        stopRecognitionNow();
+        if ("speechSynthesis" in window) {
+          window.speechSynthesis.cancel();
+        }
+        clearInterval(speechKeepAliveId);
+        setState(alwaysListening ? "wake" : "idle");
+      }
+
+      function startListening() {
+        if (!speechSupported || isSpeaking || isListening) return;
+
+        stopRecognitionNow();
+        activeRecogLang = resolveRecognitionLang();
+
+        recognition = new SpeechRecognition();
+        recognition.lang = activeRecogLang;
+        recognition.interimResults = false;
+        recognition.continuous = false;
+        recognition.maxAlternatives = 1;
+
+        let gotResult = false;
+
+        recognition.onstart = () => {
+          isListening = true;
+          if (alwaysListening && !sessionActive) {
+            setState("wake");
+          } else {
+            setState("listening");
+          }
+        };
+
+        recognition.onresult = (event) => {
+          gotResult = true;
+          isListening = false;
+          const transcript = event.results?.[0]?.[0]?.transcript?.trim() || "";
+          if (!transcript) {
+            handleEmptySpeech();
+            return;
+          }
+
+          // Always listening wake-word filter
+          if (alwaysListening && !sessionActive) {
+            const wakeMatch = transcript.match(/\b(jarvis|जार्विस)\b/i);
+            if (!wakeMatch) {
+              setTimeout(() => startListening(), 250);
+              return;
+            }
+            const afterWake = transcript
+              .replace(/^.*?\b(jarvis|जार्विस)\b[,:\s]*/i, "")
+              .trim();
+            sessionActive = true;
+            if (!afterWake) {
+              speak("Yes, I am listening.", "en-IN");
+              return;
+            }
+            processUserSpeech(afterWake);
+            return;
+          }
+
+          processUserSpeech(transcript);
+        };
+
+        recognition.onerror = (event) => {
+          isListening = false;
+          const err = event.error;
+
+          if (err === "not-allowed" || err === "service-not-allowed") {
+            sessionActive = false;
+            alwaysListening = false;
+            wakeBtn.classList.remove("active");
+            wakeBtn.textContent = "Wake: OFF";
+            speak("Microphone permission is blocked. Please allow microphone access in Chrome settings.", "en-IN");
+            return;
+          }
+
+          if (err === "audio-capture") {
+            sessionActive = false;
+            speak("No microphone was found on this device.", "en-IN");
+            return;
+          }
+
+          if (err === "network") {
+            speak("Speech service needs an internet connection.", "en-IN");
+            return;
+          }
+
+          if (err === "language-not-supported" && langMode === "auto" && !triedFallbackLang) {
+            triedFallbackLang = true;
+            setTimeout(() => startListening(), 200);
+            return;
+          }
+
+          if (err === "no-speech") {
+            handleEmptySpeech();
+            return;
+          }
+
+          if (err !== "aborted") {
+            if (sessionActive || alwaysListening) {
+              setTimeout(() => startListening(), 450);
+            } else {
+              setState("idle");
+            }
+          }
+        };
+
+        recognition.onend = () => {
+          isListening = false;
+          if (!gotResult && !isSpeaking && state === "listening") {
+            if (sessionActive || alwaysListening) {
+              setTimeout(() => startListening(), 350);
+            } else {
+              setState("idle");
+            }
+          }
+        };
+
+        try {
+          recognition.start();
+        } catch (_) {
+          isListening = false;
+        }
+      }
+
+      function handleEmptySpeech() {
+        if (alwaysListening && !sessionActive) {
+          setTimeout(() => startListening(), 300);
+          return;
+        }
+        if (langMode === "auto" && !triedFallbackLang) {
+          triedFallbackLang = true;
+          setTimeout(() => startListening(), 250);
+          return;
+        }
+        triedFallbackLang = false;
+        speak("I did not catch that. Please say it again.", "en-IN");
+      }
+
+      function processUserSpeech(text) {
+        triedFallbackLang = false;
+        appendTranscript("user", text);
+        if (!handleLocalCommand(text)) {
+          askGemini(text);
+        }
+      }
+
+      // ==================== CONTROLS ====================
+      function cycleLanguage(announce) {
+        const order = ["auto", "hi-IN", "en-IN"];
+        langMode = order[(order.indexOf(langMode) + 1) % order.length];
+        triedFallbackLang = false;
+        const labels = {
+          auto: "AUTO (HI/EN)",
+          "hi-IN": "HINDI (hi-IN)",
+          "en-IN": "ENGLISH (en-IN)"
+        };
+        langBtn.textContent = labels[langMode];
+        if (announce) {
+          const spoken =
+            langMode === "hi-IN"
+              ? "अब मैं हिंदी में सुनूँगा।"
+              : langMode === "en-IN"
+              ? "Switched to English."
+              : "Language set to automatic Hindi and English.";
+          speak(spoken, langMode === "hi-IN" ? "hi-IN" : "en-IN");
+        }
+      }
+
+      langBtn.addEventListener("click", () => cycleLanguage(false));
+
+      wakeBtn.addEventListener("click", () => {
+        if (!speechSupported) return;
+        alwaysListening = !alwaysListening;
+        wakeBtn.classList.toggle("active", alwaysListening);
+        wakeBtn.textContent = alwaysListening ? "Wake: ON" : "Wake: OFF";
+        if (alwaysListening) {
+          sessionActive = false;
+          if (!isSpeaking) startListening();
+        } else {
+          stopEverything();
+        }
+      });
+
+      reactorBtn.addEventListener("click", () => {
+        if (!speechSupported) return;
+        if (isSpeaking) {
+          window.speechSynthesis.cancel();
+          isSpeaking = false;
+          sessionActive = true;
+          startListening();
+          return;
+        }
+        if (isListening && sessionActive) {
+          stopEverything();
+          return;
+        }
+        sessionActive = true;
+        triedFallbackLang = false;
+        startListening();
+      });
+
+      // ==================== INIT ====================
+      if (!speechSupported) {
+        compatBanner.classList.add("visible");
+      }
+
+      if (getApiKey()) {
+        showAssistant();
+      } else {
+        showSetup(false);
+      }
+    })();
+  </script>
+</body>
+</html>
